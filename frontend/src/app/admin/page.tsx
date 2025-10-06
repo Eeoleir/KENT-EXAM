@@ -1,34 +1,72 @@
-import { cookies } from "next/headers";
+"use client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { api } from "@/lib/api";
 
-async function fetchAdmin() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("token")?.value;
-  const res = await fetch(
-    (process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000/api") +
-      "/admin",
-    {
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      cache: "no-store",
-      credentials: "include" as RequestInit["credentials"],
-    }
-  );
-  if (res.status === 401 || res.status === 403) return null;
-  if (!res.ok) throw new Error("Failed to load admin data");
-  return res.json() as Promise<{
-    users: Array<{
-      id: number;
-      email: string;
-      role: "USER" | "ADMIN";
-      isActive: boolean;
-      createdAt: string;
-    }>;
+type AdminData = {
+  users: Array<{
+    id: number;
+    email: string;
+    role: "USER" | "ADMIN";
+    isActive: boolean;
+    createdAt: string;
   }>;
-}
+} | null;
 
-export default async function AdminPage() {
-  const data = await fetchAdmin();
-  if (!data)
+export default function AdminPage() {
+  const [data, setData] = useState<AdminData>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    setLoading(true);
+    api
+      .get("/admin")
+      .then((r) => {
+        if (!mounted) return;
+        setData(r.data);
+        setError(null);
+      })
+      .catch((e) => {
+        if (!mounted) return;
+        if (e?.response?.status === 401 || e?.response?.status === 403) {
+          setData(null);
+          setError(null);
+        } else {
+          setError("Failed to load admin data");
+        }
+      })
+      .finally(() => mounted && setLoading(false));
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="mx-auto mt-12 max-w-3xl rounded-lg border bg-white p-6 shadow-sm">
+        <h1 className="mb-2 text-2xl font-semibold">Admin</h1>
+        <p>Loading…</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mx-auto mt-12 max-w-3xl rounded-lg border bg-white p-6 shadow-sm">
+        <h1 className="mb-2 text-2xl font-semibold">Admin</h1>
+        <p className="mb-3 text-red-600">{error}</p>
+        <p>
+          <Link className="text-blue-700 underline" href="/">
+            ← Back to Dashboard
+          </Link>
+        </p>
+      </div>
+    );
+  }
+
+  if (!data) {
     return (
       <div className="mx-auto mt-12 max-w-3xl rounded-lg border bg-white p-6 shadow-sm">
         <h1 className="mb-2 text-2xl font-semibold">Admin</h1>
@@ -40,6 +78,8 @@ export default async function AdminPage() {
         </p>
       </div>
     );
+  }
+
   return (
     <div className="mx-auto mt-12 max-w-5xl space-y-4 p-4">
       <div className="flex items-center justify-between">
