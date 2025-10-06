@@ -40,7 +40,7 @@ authRouter.post("/register", async (req, res) => {
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     secure: process.env.NODE_ENV === "production",
   });
-  res.json({ id: user.id, email: user.email, role: user.role });
+  res.json({ id: user.id, email: user.email, role: user.role, token });
 });
 
 authRouter.post("/login", async (req, res) => {
@@ -58,7 +58,7 @@ authRouter.post("/login", async (req, res) => {
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     secure: process.env.NODE_ENV === "production",
   });
-  res.json({ id: user.id, email: user.email, role: user.role });
+  res.json({ id: user.id, email: user.email, role: user.role, token });
 });
 
 authRouter.post("/logout", (_req, res) => {
