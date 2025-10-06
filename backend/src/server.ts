@@ -72,7 +72,23 @@ app.post(
             where: { id: userId },
             data: { isActive: true },
           });
-          console.log("Stripe webhook: user activated", { userId });
+          // Read back isActive and print DB host to confirm same database
+          const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { isActive: true },
+          });
+          let dbHost: string | undefined;
+          try {
+            const u = new URL(process.env.DATABASE_URL || "");
+            dbHost = u.hostname;
+          } catch {
+            dbHost = undefined;
+          }
+          console.log("Stripe webhook: user activated", {
+            userId,
+            readBackIsActive: user?.isActive,
+            dbHost,
+          });
         } else {
           console.warn(
             "Stripe webhook: missing client_reference_id on session",
