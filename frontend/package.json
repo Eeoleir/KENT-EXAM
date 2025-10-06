@@ -15,6 +15,7 @@
     "react-dom": "19.1.0"
   },
   "devDependencies": {
+    "@netlify/plugin-nextjs": "^5",
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4.1.14",
     "@types/node": "^20",
