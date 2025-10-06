@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String   @map("password")
+  role         Role     @default(USER) @map("role")
+  isActive     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  videos       Video[]
+
+  @@map("users")
+}
+
+model Video {
+  id        Int      @id @default(autoincrement())
+  url       String
+  userId    Int
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([url, userId])
+  @@map("videos")
+}
+
+enum Role {
+  USER  @map("user")
+  ADMIN @map("admin")
+}
+
+
+
