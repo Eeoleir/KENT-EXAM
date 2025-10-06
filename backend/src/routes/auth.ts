@@ -71,24 +71,15 @@ authRouter.post("/logout", (_req, res) => {
 });
 
 authRouter.get("/me", requireAuth, async (req, res) => {
-  const bearer = req.headers.authorization;
-  const token =
-    (req as any).cookies?.token ||
-    (bearer && bearer.startsWith("Bearer ") ? bearer.split(" ")[1] : undefined);
-  if (!token) return res.status(401).json({ message: "Unauthorized" });
-  try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET as string) as {
-      userId: number;
-    };
-    const user = await prisma.user.findUnique({
-      where: { id: payload.userId },
-      select: { id: true, email: true, role: true },
-    });
-    if (!user) return res.status(401).json({ message: "Unauthorized" });
-    res.json(user);
-  } catch {
-    res.status(401).json({ message: "Unauthorized" });
-  }
+  res.set("Cache-Control", "no-store");
+  const userId = (req as any).user?.id as number | undefined;
+  if (!userId) return res.status(401).json({ message: "Unauthorized" });
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, email: true, role: true },
+  });
+  if (!user) return res.status(401).json({ message: "Unauthorized" });
+  res.json(user);
 });
 
 export default authRouter;

@@ -38,29 +38,56 @@ app.post(
   async (req, res) => {
     const sig = req.headers["stripe-signature"] as string | undefined;
     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
-    if (!endpointSecret || !sig)
+    if (!endpointSecret || !sig) {
+      console.warn("Stripe webhook: missing signature or endpoint secret", {
+        hasSig: !!sig,
+        hasSecret: !!endpointSecret,
+      });
       return res.status(400).send("Missing signature");
+    }
     let event: Stripe.Event;
     try {
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
       event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+      console.log("Stripe webhook: event constructed", { type: event.type });
     } catch (err: any) {
+      console.error(
+        "Stripe webhook: signature verification failed",
+        err?.message
+      );
       return res.status(400).send(`Webhook Error: ${err.message}`);
     }
     try {
       if (event.type === "checkout.session.completed") {
         const session = event.data.object as Stripe.Checkout.Session;
+        console.log("Stripe webhook: checkout.session.completed", {
+          sessionId: session.id,
+          clientReferenceId: session.client_reference_id,
+        });
         const clientRef = session.client_reference_id;
         if (clientRef) {
           const userId = parseInt(clientRef, 10);
+          console.log("Stripe webhook: activating user", { userId });
           await prisma.user.update({
             where: { id: userId },
             data: { isActive: true },
           });
+          console.log("Stripe webhook: user activated", { userId });
+        } else {
+          console.warn(
+            "Stripe webhook: missing client_reference_id on session",
+            {
+              sessionId: session.id,
+            }
+          );
         }
       }
       res.json({ received: true });
     } catch (e) {
+      console.error(
+        "Stripe webhook: handling failed",
+        (e as any)?.message || e
+      );
       res.status(500).json({ message: "Webhook handling failed" });
     }
   }
