@@ -14,7 +14,9 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     try {
-      await api.post("/auth/login", { email, password });
+      const r = await api.post("/auth/login", { email, password });
+      const token = r.data?.token as string | undefined;
+      if (token) localStorage.setItem("token", token);
       router.push("/");
     } catch (err) {
       const e = err as { response?: { data?: { message?: string } } };

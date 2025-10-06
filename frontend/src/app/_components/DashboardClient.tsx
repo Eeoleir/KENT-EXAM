@@ -161,7 +161,13 @@ export default function DashboardClient({ initialMe }: { initialMe: Me }) {
             <button
               className="rounded border bg-white px-3 py-1 shadow-sm hover:bg-gray-50"
               onClick={async () => {
-                await api.post("/auth/logout");
+                try {
+                  await api.post("/auth/logout");
+                } finally {
+                  if (typeof window !== "undefined") {
+                    localStorage.removeItem("token");
+                  }
+                }
                 location.reload();
               }}
             >
