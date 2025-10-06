@@ -20,42 +20,6 @@ export default function DashboardClient({ initialMe }: { initialMe: Me }) {
       .catch(() => setMe(null));
   }, []);
 
-  // After Stripe redirect with ?status=success, poll status briefly until active to handle webhook lag
-  useEffect(() => {
-    const url = new URL(window.location.href);
-    const status = url.searchParams.get("status");
-    if (status !== "success") return;
-    let cancelled = false;
-    let tries = 0;
-    const maxTries = 10; // ~10s
-    const poll = async () => {
-      tries += 1;
-      try {
-        const meRes = await api.get("/auth/me");
-        if (!cancelled) setMe(meRes.data);
-      } catch {
-        if (!cancelled) setMe(null);
-      }
-      try {
-        const st = await api.get("/billing/status");
-        const isOn = !!st.data?.active;
-        if (!cancelled) setActive(isOn);
-        if (isOn || tries >= maxTries) {
-          url.searchParams.delete("status");
-          window.history.replaceState({}, "", url.toString());
-          return; // stop polling
-        }
-      } catch {
-        if (!cancelled) setActive(false);
-      }
-      if (!cancelled) setTimeout(poll, 1000);
-    };
-    poll();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   useEffect(() => {
     if (!me) {
       setActive(null);
