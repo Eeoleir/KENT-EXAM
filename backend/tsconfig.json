@@ -1,5 +1,4 @@
 {
-
   "compilerOptions": {
     // File Layout
     "rootDir": "src",
@@ -13,10 +12,8 @@
     "declaration": true,
     "declarationMap": true,
 
- 
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
-
 
     "strict": true,
     "jsx": "react-jsx",
@@ -27,5 +24,6 @@
     "skipLibCheck": true,
 
     "esModuleInterop": true
-  }
+  },
+  "include": ["src/**/*"]
 }
