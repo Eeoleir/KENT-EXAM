@@ -35,7 +35,11 @@ authRouter.post("/register", async (req, res) => {
   });
   const jwtSecret = process.env.JWT_SECRET || "dev-secret";
   const token = jwt.sign({ userId: user.id }, jwtSecret, { expiresIn: "7d" });
-  res.cookie("token", token, { httpOnly: true, sameSite: "lax" });
+  res.cookie("token", token, {
+    httpOnly: true,
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: process.env.NODE_ENV === "production",
+  });
   res.json({ id: user.id, email: user.email, role: user.role });
 });
 
@@ -49,12 +53,20 @@ authRouter.post("/login", async (req, res) => {
   if (!ok) return res.status(401).json({ message: "Invalid credentials" });
   const jwtSecret = process.env.JWT_SECRET || "dev-secret";
   const token = jwt.sign({ userId: user.id }, jwtSecret, { expiresIn: "7d" });
-  res.cookie("token", token, { httpOnly: true, sameSite: "lax" });
+  res.cookie("token", token, {
+    httpOnly: true,
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: process.env.NODE_ENV === "production",
+  });
   res.json({ id: user.id, email: user.email, role: user.role });
 });
 
 authRouter.post("/logout", (_req, res) => {
-  res.clearCookie("token");
+  res.clearCookie("token", {
+    httpOnly: true,
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: process.env.NODE_ENV === "production",
+  });
   res.json({ ok: true });
 });
 
