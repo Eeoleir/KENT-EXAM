@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef, memo } from "react";
 import Link from "next/link";
 import { api } from "../../lib/api";
 
@@ -48,11 +48,9 @@ export default function DashboardClient({ initialMe }: { initialMe: Me }) {
 
     // Only load data once per user session
     if (hasLoadedData.current) {
-      console.log("Skipping data load - already loaded");
       return;
     }
 
-    console.log("Loading subscription and video data...");
     setIsLoadingSubscription(true);
     Promise.all([
       api
@@ -66,7 +64,6 @@ export default function DashboardClient({ initialMe }: { initialMe: Me }) {
     ]).finally(() => {
       setIsLoadingSubscription(false);
       hasLoadedData.current = true;
-      console.log("Data loaded successfully");
     });
   }, [me]);
 
@@ -138,22 +135,23 @@ export default function DashboardClient({ initialMe }: { initialMe: Me }) {
     }
   }
 
-  function VideoEmbed({ url }: { url: string }) {
+  const VideoEmbed = memo(({ url }: { url: string }) => {
     const id = useMemo(() => extractYouTubeId(url), [url]);
     if (!id) return null;
     return (
       <div className="aspect-video w-full overflow-hidden rounded border">
         <iframe
           className="h-full w-full"
-          src={`https://www.youtube.com/embed/${id}`}
+          src={`https://www.youtube.com/embed/${id}?rel=0&modestbranding=1`}
           title="YouTube video player"
           frameBorder={0}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowFullScreen
+          loading="lazy"
         />
       </div>
     );
-  }
+  });
 
   return (
     <div className="mx-auto mt-12 max-w-3xl p-4">
@@ -211,9 +209,11 @@ export default function DashboardClient({ initialMe }: { initialMe: Me }) {
               </form>
               {error && <p className="mb-2 text-sm text-red-600">{error}</p>}
               <div id="videos" className="grid gap-4">
-                {videos.map((v) => (
-                  <VideoEmbed key={v.id} url={v.url} />
-                ))}
+                {useMemo(
+                  () =>
+                    videos.map((v) => <VideoEmbed key={v.id} url={v.url} />),
+                  [videos]
+                )}
               </div>
             </div>
           ) : null}
