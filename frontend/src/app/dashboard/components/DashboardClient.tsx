@@ -31,7 +31,7 @@ export default function DashboardClient({ initialMe }: DashboardClientProps) {
         window.location.href = url;
       }
     } catch (err) {
-      console.error("Failed to start checkout:", err);
+      /* ignore */
     }
   };
 
@@ -39,7 +39,7 @@ export default function DashboardClient({ initialMe }: DashboardClientProps) {
     try {
       await api.post("/auth/logout");
     } catch (err) {
-      console.error("Logout API call failed:", err);
+      /* ignore */
     } finally {
       // Clear token from localStorage
       localStorage.removeItem("token");

@@ -25,14 +25,12 @@ app.use(
   })
 );
 
-
 app.use((req, res, next) => {
   if (req.method === "OPTIONS") {
     return res.sendStatus(204);
   }
   next();
 });
-
 
 app.post(
   "/api/webhooks/stripe",
@@ -108,7 +106,6 @@ app.get("/api/admin", requireAuth, requireRole("ADMIN"), async (_req, res) => {
   res.json({ users });
 });
 
-
 app.use(
   (
     err: any,
@@ -116,7 +113,7 @@ app.use(
     res: express.Response,
     _next: express.NextFunction
   ) => {
-    console.error("Unhandled error:", err?.message || err);
+    // Swallow console output in production; rely on HTTP response
     const status = typeof err?.status === "number" ? err.status : 500;
     res.status(status).json({
       message: err?.message || "Internal Server Error",
@@ -126,5 +123,5 @@ app.use(
 
 const port = process.env.PORT || 4000;
 app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
+  // server listening
 });
