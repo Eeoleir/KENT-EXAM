@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import Link from "next/link";
 import { api } from "../../lib/api";
 
@@ -14,6 +14,7 @@ export default function DashboardClient({ initialMe }: { initialMe: Me }) {
   const [isLoading, setIsLoading] = useState(!initialMe);
   const [isLoadingSubscription, setIsLoadingSubscription] = useState(false);
   const [isAddingVideo, setIsAddingVideo] = useState(false);
+  const hasLoadedData = useRef(false);
 
   useEffect(() => {
     // Keep me in sync if cookie/session changes client-side
@@ -41,9 +42,17 @@ export default function DashboardClient({ initialMe }: { initialMe: Me }) {
     if (!me) {
       setActive(null);
       setVideos([]);
+      hasLoadedData.current = false;
       return;
     }
 
+    // Only load data once per user session
+    if (hasLoadedData.current) {
+      console.log("Skipping data load - already loaded");
+      return;
+    }
+
+    console.log("Loading subscription and video data...");
     setIsLoadingSubscription(true);
     Promise.all([
       api
@@ -54,7 +63,11 @@ export default function DashboardClient({ initialMe }: { initialMe: Me }) {
         .get("/videos")
         .then((r) => setVideos(r.data || []))
         .catch(() => setVideos([])),
-    ]).finally(() => setIsLoadingSubscription(false));
+    ]).finally(() => {
+      setIsLoadingSubscription(false);
+      hasLoadedData.current = true;
+      console.log("Data loaded successfully");
+    });
   }, [me]);
 
   const onSubscribe = async () => {
