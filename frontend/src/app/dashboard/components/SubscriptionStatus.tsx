@@ -37,16 +37,5 @@ export default function SubscriptionStatus({
     );
   }
 
-  if (isActive === true) {
-    return (
-      <div className="mt-4 rounded-lg border bg-white p-4 shadow-sm">
-        <p className="mb-3 text-green-700">You are subscribed.</p>
-        <Link className="text-blue-700 underline" href="/#videos">
-          Video Library
-        </Link>
-      </div>
-    );
-  }
-
   return null;
 }
