@@ -12,7 +12,8 @@ export default function DashboardClient({ initialMe }: { initialMe: Me }) {
   const [videos, setVideos] = useState<Array<{ id: number; url: string }>>([]);
   const [newUrl, setNewUrl] = useState("");
   const [isLoading, setIsLoading] = useState(!initialMe);
-  const [isLoadingVideos, setIsLoadingVideos] = useState(false);
+  const [isLoadingSubscription, setIsLoadingSubscription] = useState(false);
+  const [isAddingVideo, setIsAddingVideo] = useState(false);
 
   useEffect(() => {
     // Keep me in sync if cookie/session changes client-side
@@ -43,7 +44,7 @@ export default function DashboardClient({ initialMe }: { initialMe: Me }) {
       return;
     }
 
-    setIsLoadingVideos(true);
+    setIsLoadingSubscription(true);
     Promise.all([
       api
         .get("/billing/status")
@@ -53,7 +54,7 @@ export default function DashboardClient({ initialMe }: { initialMe: Me }) {
         .get("/videos")
         .then((r) => setVideos(r.data || []))
         .catch(() => setVideos([])),
-    ]).finally(() => setIsLoadingVideos(false));
+    ]).finally(() => setIsLoadingSubscription(false));
   }, [me]);
 
   const onSubscribe = async () => {
@@ -75,7 +76,7 @@ export default function DashboardClient({ initialMe }: { initialMe: Me }) {
   const onAddVideo = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setIsLoadingVideos(true);
+    setIsAddingVideo(true);
     try {
       const response = await api.post("/videos", { url: newUrl });
       // Add the new video to the existing list instead of refetching
@@ -87,7 +88,7 @@ export default function DashboardClient({ initialMe }: { initialMe: Me }) {
       };
       setError(e?.response?.data?.message || "Failed to add video");
     } finally {
-      setIsLoadingVideos(false);
+      setIsAddingVideo(false);
     }
   };
 
@@ -158,7 +159,7 @@ export default function DashboardClient({ initialMe }: { initialMe: Me }) {
             Signed in as <strong>{me.email}</strong> (role: {me.role})
           </p>
 
-          {isLoadingVideos ? (
+          {isLoadingSubscription ? (
             <div className="mt-3 rounded-lg border bg-white p-4 shadow-sm">
               <div className="animate-pulse">
                 <div className="mb-2 h-4 w-1/2 rounded bg-gray-200"></div>
@@ -190,9 +191,9 @@ export default function DashboardClient({ initialMe }: { initialMe: Me }) {
                 />
                 <button
                   className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
-                  disabled={isLoadingVideos}
+                  disabled={isAddingVideo}
                 >
-                  {isLoadingVideos ? "Adding..." : "Add"}
+                  {isAddingVideo ? "Adding..." : "Add"}
                 </button>
               </form>
               {error && <p className="mb-2 text-sm text-red-600">{error}</p>}
