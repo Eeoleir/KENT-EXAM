@@ -67,6 +67,13 @@ export default function DashboardClient({ initialMe }: DashboardClientProps) {
         <>
           <UserInfo user={me} />
 
+          <ActionButtons
+            user={me}
+            onLogout={onLogout}
+            showAdmin={true}
+            showLogout={false}
+          />
+
           <SubscriptionStatus
             isActive={active}
             isLoading={isLoadingSubscription}
@@ -84,7 +91,12 @@ export default function DashboardClient({ initialMe }: DashboardClientProps) {
             </div>
           )}
 
-          <ActionButtons user={me} onLogout={onLogout} />
+          <ActionButtons
+            user={me}
+            onLogout={onLogout}
+            showAdmin={false}
+            showLogout={true}
+          />
         </>
       ) : (
         <NotSignedIn />
