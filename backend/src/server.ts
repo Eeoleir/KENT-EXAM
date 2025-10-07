@@ -64,6 +64,8 @@ app.post(
       hasSignature: !!sig,
       hasEndpointSecret: !!endpointSecret,
       signatureLength: sig?.length || 0,
+      signaturePreview: sig ? sig.substring(0, 20) + "..." : "none",
+      endpointSecretPreview: endpointSecret ? endpointSecret.substring(0, 20) + "..." : "none"
     });
 
     if (!endpointSecret || !sig) {
