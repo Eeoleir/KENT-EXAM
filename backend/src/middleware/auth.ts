@@ -1,45 +1,73 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "../lib/prisma";
 
 export interface AuthRequest extends Request {
   user?: { id: number; role: "USER" | "ADMIN" };
 }
 
-export function requireAuth(
+export async function requireAuth(
   req: AuthRequest,
   res: Response,
   next: NextFunction
-) {
-  const bearer = req.headers.authorization;
-  const token =
-    (req as any).cookies?.token ||
-    (bearer && bearer.startsWith("Bearer ") ? bearer.split(" ")[1] : undefined);
-  if (!token) return res.status(401).json({ message: "Unauthorized" });
+): Promise<void> {
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET as string) as {
-      userId: number;
-    };
-    prisma.user
-      .findUnique({ where: { id: payload.userId } })
-      .then((user: { id: number; role: "USER" | "ADMIN" } | null) => {
-        if (!user) return res.status(401).json({ message: "Unauthorized" });
-        (req as AuthRequest).user = { id: user.id, role: user.role as any };
-        next();
-      })
-      .catch(() => res.status(500).json({ message: "Server error" }));
-  } catch {
-    return res.status(401).json({ message: "Invalid token" });
+    const token = extractToken(req);
+    if (!token) {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
+    }
+
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      res.status(500).json({ message: "Server configuration error" });
+      return;
+    }
+
+    const payload = jwt.verify(token, jwtSecret) as { userId: number };
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { id: true, role: true },
+    });
+
+    if (!user) {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
+    }
+
+    req.user = { id: user.id, role: user.role };
+    next();
+  } catch (error) {
+    res.status(401).json({ message: "Invalid token" });
   }
 }
 
 export function requireRole(role: "USER" | "ADMIN") {
-  return (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
-    if (role === "ADMIN" && req.user.role !== "ADMIN")
-      return res.status(403).json({ message: "Forbidden" });
+  return (req: AuthRequest, res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      res.status(401).json({ message: "Unauthorized" });
+      return;
+    }
+
+    if (role === "ADMIN" && req.user.role !== "ADMIN") {
+      res.status(403).json({ message: "Forbidden" });
+      return;
+    }
+
     next();
   };
+}
+
+// Helper function to extract token from request
+function extractToken(req: AuthRequest): string | null {
+  // Try Bearer token first
+  const bearer = req.headers.authorization;
+  if (bearer && bearer.startsWith("Bearer ")) {
+    const token = bearer.split(" ")[1];
+    return token || null;
+  }
+
+  // Fallback to cookie
+  const cookies = req.cookies as { token?: string } | undefined;
+  return cookies?.token ? cookies.token : null;
 }

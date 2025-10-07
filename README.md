@@ -1,148 +1,246 @@
-# EXAM App - Setup (5 minutes)
+# Kent Exam - Subscription Video Platform
 
-## Prerequisites
+A full-stack subscription-based video platform built with Next.js, TypeScript, Prisma, and Stripe.
 
-- Node 18+ (verify with `node -v`)
-- npm 9+ (verify with `npm -v`)
+## Features
+
+- **Authentication**: Email/password sign up & sign in with role-based access (USER/ADMIN)
+- **Stripe Subscriptions**: Test mode subscription handling with webhook verification
+- **Protected Dashboard**: Subscriber-only access to video library
+- **Admin Panel**: User management and subscription status overview
+- **Video Library**: YouTube URL validation, storage, and embedded playback
+- **Security**: Webhook signature verification, route protection, and secret management
+
+## Tech Stack
+
+- **Frontend**: Next.js 14 (App Router), TypeScript, Tailwind CSS
+- **Backend**: Express.js, TypeScript, Prisma ORM
+- **Database**: PostgreSQL (production) / SQLite (development)
+- **Payments**: Stripe (test mode)
+- **Authentication**: JWT with httpOnly cookies
+- **Deployment**: Render (backend), Vercel/Netlify (frontend)
+
+## Quick Start
+
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn
+- PostgreSQL database (for production)
 - Stripe account (test mode)
-- Stripe CLI (for local webhooks): https://stripe.com/docs/stripe-cli
-- MySQL 8+ running locally (or adjust DATABASE_URL)
 
-## 1) Backend setup
+### 1. Clone and Install
 
-Create `backend/.env` (see examples below):
-
-```
-DATABASE_URL="mysql://root@127.0.0.1:3306/exam"
-JWT_SECRET="your-strong-secret"
-STRIPE_SECRET_KEY=sk_test_xxx
-STRIPE_PRICE_ID=price_xxx
-STRIPE_WEBHOOK_SECRET=whsec_xxx
+```bash
+git clone <repository-url>
+cd kent-exam
+npm install
+cd backend && npm install
+cd ../frontend && npm install
 ```
 
-Install & run:
+### 2. Environment Setup
 
+#### Backend (.env)
+
+```bash
+# Database
+DATABASE_URL="postgresql://username:password@localhost:5432/kent_exam"
+
+# JWT
+JWT_SECRET="your-super-secret-jwt-key"
+
+# Stripe (Test Mode)
+STRIPE_SECRET_KEY="sk_test_..."
+STRIPE_PRICE_ID="price_..."
+STRIPE_WEBHOOK_SECRET="whsec_..."
+
+# Server
+PORT=4000
+NODE_ENV="development"
 ```
+
+#### Frontend (.env.local)
+
+```bash
+NEXT_PUBLIC_API_URL="http://localhost:4000/api"
+```
+
+### 3. Database Setup
+
+```bash
 cd backend
-npm i
-npx prisma generate
-npx prisma db push
+npx prisma migrate dev
+npx prisma db seed
+```
+
+### 4. Run Development Servers
+
+```bash
+# Backend (Terminal 1)
+cd backend
+npm run dev
+
+# Frontend (Terminal 2)
+cd frontend
 npm run dev
 ```
 
-Seed admin user:
+### 5. Access the Application
+
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:4000/api
+- **Admin Login**: admin@gmail.com / admin123
+
+## Stripe Setup
+
+### 1. Create Stripe Account
+
+- Sign up at [stripe.com](https://stripe.com)
+- Enable test mode
+
+### 2. Create Product & Price
+
+- Go to Products → Add Product
+- Create a subscription product
+- Copy the Price ID to `STRIPE_PRICE_ID`
+
+### 3. Configure Webhook
+
+- Go to Developers → Webhooks
+- Add endpoint: `https://your-domain.com/api/webhooks/stripe`
+- Select event: `checkout.session.completed`
+- Copy signing secret to `STRIPE_WEBHOOK_SECRET`
+
+### 4. Test Cards
+
+- Use `4242 4242 4242 4242` for successful payments
+- Use `4000 0000 0000 0002` for declined payments
+
+## Project Structure
 
 ```
-npm run seed   # admin@gmail.com / admin123
+kent-exam/
+├── backend/
+│   ├── src/
+│   │   ├── routes/          # API routes
+│   │   ├── middleware/      # Auth middleware
+│   │   ├── lib/            # Database connection
+│   │   └── server.ts       # Express server
+│   ├── prisma/
+│   │   ├── schema.prisma   # Database schema
+│   │   └── seed.ts         # Admin user seed
+│   └── package.json
+├── frontend/
+│   ├── src/
+│   │   ├── app/            # Next.js app router
+│   │   │   ├── dashboard/  # Protected dashboard
+│   │   │   ├── admin/      # Admin panel
+│   │   │   ├── login/      # Auth pages
+│   │   │   └── register/
+│   │   └── lib/            # API client
+│   └── package.json
+└── README.md
 ```
 
-Start Stripe webhook (new terminal):
+## API Endpoints
 
-```
-stripe login
-stripe listen --forward-to http://localhost:4000/api/webhooks/stripe
-```
+### Authentication
 
-## 2) Frontend setup
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
+- `POST /api/auth/logout` - User logout
+- `GET /api/auth/me` - Get current user
 
-Create `frontend/.env.local` (optional if backend uses 4000):
+### Billing
 
-```
-NEXT_PUBLIC_API_BASE=http://localhost:4000/api
-```
+- `POST /api/billing/create-checkout-session` - Create Stripe checkout
+- `GET /api/billing/status` - Check subscription status
 
-Install & run:
+### Videos
 
-```
-cd frontend
-npm i
-npm run dev
-```
+- `GET /api/videos` - List user's videos (subscribers only)
+- `POST /api/videos` - Add YouTube URL (subscribers only)
 
-## Usage
+### Admin
 
-- Register or log in.
-- Home page acts as Dashboard.
-- If not subscribed: click Subscribe → Stripe Checkout (test card 4242 4242 4242 4242).
-- On success, webhook marks your account active; page shows “You are subscribed.”
-- Video Library: add YouTube URL, list renders embedded players. Duplicates blocked.
-- Admin: `/admin` (restricted to admin).
+- `GET /api/admin` - List all users (admin only)
 
-## Notes
+### Webhooks
 
-- Auth: custom JWT (httpOnly cookie). Roles: USER/ADMIN.
-- Security: Webhook signature verified; role checks server-side; secrets via env.
-- DB: Prisma models `users` and `videos` with constraints.
-- Dev caveat: Ensure Stripe envs are set and `stripe listen` is running during test checkout.
+- `POST /api/webhooks/stripe` - Stripe webhook handler
 
-## Production build & run
+## Security Features
 
-Backend:
+- **JWT Authentication**: Secure token-based auth with httpOnly cookies
+- **Role-Based Access**: USER/ADMIN roles with proper middleware
+- **Route Protection**: All sensitive routes require authentication
+- **Webhook Verification**: Stripe signature verification
+- **Input Validation**: Zod schemas for all API inputs
+- **Secret Management**: Environment variables for all secrets
+- **Error Sanitization**: No sensitive data in error responses
 
-```
-cd backend
-npm run build
-PORT=4000 npm start
-```
+## Deployment
 
-Notes:
+### Backend (Render)
 
-- Set `CORS_ORIGIN` to your frontend origin (e.g., https://app.example.com) or keep permissive dev CORS only for local.
-- Ensure `JWT_SECRET` is set (the app will throw if missing in production).
-- Use HTTPS in prod; set secure cookies if served over TLS.
+1. Connect GitHub repository
+2. Set environment variables
+3. Deploy automatically on push
 
-Frontend:
+### Frontend (Vercel/Netlify)
 
-```
-cd frontend
-npm run build
-PORT=3000 npm start
-```
+1. Connect GitHub repository
+2. Set `NEXT_PUBLIC_API_URL` to production backend URL
+3. Deploy automatically on push
 
-Set `NEXT_PUBLIC_API_BASE` to your backend URL (e.g., https://api.example.com/api).
+## Testing
 
-Stripe Webhooks in production:
+### Manual Testing Checklist
 
-- In Stripe Dashboard → Developers → Webhooks → Add endpoint.
-- URL: `https://api.example.com/api/webhooks/stripe`; select `checkout.session.completed`.
-- Copy the signing secret and set `STRIPE_WEBHOOK_SECRET` in backend `.env`.
+- [ ] User registration and login
+- [ ] Admin user access
+- [ ] Stripe subscription flow
+- [ ] Webhook activation
+- [ ] Video library access (subscribers only)
+- [ ] YouTube URL validation
+- [ ] Route protection
+- [ ] Error handling
 
-## .env examples
+### Test Accounts
 
-`backend/.env.example`
-
-```
-DATABASE_URL="mysql://root@127.0.0.1:3306/exam"
-JWT_SECRET="change-me"
-STRIPE_SECRET_KEY=sk_test_xxx
-STRIPE_PRICE_ID=price_xxx
-STRIPE_WEBHOOK_SECRET=whsec_xxx
-```
-
-`frontend/.env.local.example`
-
-```
-NEXT_PUBLIC_API_BASE=http://localhost:4000/api
-```
+- **Admin**: admin@gmail.com / admin123
+- **Test User**: Register new account via UI
 
 ## Troubleshooting
 
-- Prisma generate EPERM on Windows: close node processes, delete `backend/node_modules/.prisma/client`, re-run `npx prisma generate`.
-- Stripe webhook 400: verify `STRIPE_WEBHOOK_SECRET` matches your active forwarder or dashboard endpoint.
-- CORS/credentials: ensure frontend uses `withCredentials: true` and backend CORS allows origin+credentials.
-- Database auth: confirm `DATABASE_URL` credentials and that DB `exam` exists.
+### Common Issues
 
-## Scripts
+1. **Webhook not working**
 
-Backend:
+   - Check webhook URL in Stripe dashboard
+   - Verify `STRIPE_WEBHOOK_SECRET` matches
+   - Ensure webhook endpoint is accessible
 
-- `npm run dev`: start dev server
-- `npm run build`: compile TypeScript
-- `npm start`: run built server
-- `npm run seed`: seed admin user
+2. **Database connection issues**
 
-Frontend:
+   - Verify `DATABASE_URL` format
+   - Run `npx prisma migrate dev`
+   - Check database server status
 
-- `npm run dev`: start Next.js dev server
-- `npm run build`: build for production
-- `npm start`: run production server
+3. **Authentication issues**
+   - Verify `JWT_SECRET` is set
+   - Check cookie settings for production
+   - Ensure CORS is configured correctly
+
+## Development Notes
+
+- All Stripe operations are in test mode
+- Database uses PostgreSQL in production, SQLite in development
+- Frontend polls for subscription status after Stripe redirect
+- Video validation supports youtube.com and youtu.be URLs
+- Admin user is seeded automatically on database setup
+
+## License
+
+This project is for educational purposes only.
