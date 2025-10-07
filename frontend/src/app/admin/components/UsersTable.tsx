@@ -8,7 +8,7 @@ interface UsersTableProps {
 export default function UsersTable({ users }: UsersTableProps) {
   return (
     <div className="overflow-x-auto rounded-lg border bg-white shadow-sm">
-      <table className="min-w-[720px] border-collapse text-sm">
+      <table className="w-full min-w-[720px] border-collapse text-sm">
         <thead className="bg-gray-50 text-left">
           <tr>
             <th className="border-b px-4 py-2">ID</th>
