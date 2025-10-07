@@ -52,9 +52,11 @@ export default function DashboardClient({ initialMe }: DashboardClientProps) {
 
   return (
     <div className="mx-auto mt-12 max-w-3xl p-4">
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
-      </div>
+      {me && (
+        <div className="mb-4 flex items-center justify-between">
+          <h1 className="text-2xl font-semibold">Dashboard</h1>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="space-y-4">

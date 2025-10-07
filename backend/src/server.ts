@@ -25,7 +25,7 @@ app.use(
   })
 );
 
-// Handle preflight without wildcard route patterns (Express 5 compatibility)
+
 app.use((req, res, next) => {
   if (req.method === "OPTIONS") {
     return res.sendStatus(204);
@@ -33,7 +33,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Stripe webhook must be before JSON parser to access raw body
+
 app.post(
   "/api/webhooks/stripe",
   express.raw({ type: "application/json" }),
@@ -108,7 +108,7 @@ app.get("/api/admin", requireAuth, requireRole("ADMIN"), async (_req, res) => {
   res.json({ users });
 });
 
-// Unified error handler to return JSON and log server-side
+
 app.use(
   (
     err: any,
