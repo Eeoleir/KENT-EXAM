@@ -77,10 +77,10 @@ export default function DashboardClient({ initialMe }: { initialMe: Me }) {
     setError("");
     setIsLoadingVideos(true);
     try {
-      await api.post("/videos", { url: newUrl });
+      const response = await api.post("/videos", { url: newUrl });
+      // Add the new video to the existing list instead of refetching
+      setVideos((prevVideos) => [...prevVideos, response.data]);
       setNewUrl("");
-      const r = await api.get("/videos");
-      setVideos(r.data || []);
     } catch (err) {
       const e = err as {
         response?: { data?: { message?: string } };
