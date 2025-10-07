@@ -15,7 +15,6 @@ function isYouTubeUrl(url: string): boolean {
       return false;
     }
 
-    // Accept typical formats like https://www.youtube.com/watch?v=ID or https://youtu.be/ID
     if (hostname.includes("youtu.be")) {
       return u.pathname.length > 1;
     }
@@ -35,7 +34,6 @@ const addVideoSchema = z.object({
   url: z.string().url().min(6),
 });
 
-// List videos for the authenticated active subscriber
 router.get("/", requireAuth, async (req: AuthRequest, res) => {
   try {
     const user = await prisma.user.findUnique({

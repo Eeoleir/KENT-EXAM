@@ -33,11 +33,6 @@ export default function RootLayout({
             <Link href="/" className="text-lg font-semibold">
               KENT BRYAN V. ASILO EXAM
             </Link>
-            <nav className="flex gap-4 text-sm">
-              <Link className="hover:underline" href="/">
-                Dashboard
-              </Link>
-            </nav>
           </div>
         </header>
         <main className="min-h-[calc(100dvh-56px)] bg-gray-50/60">
