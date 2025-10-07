@@ -22,7 +22,7 @@ export default function ActionButtons({
           className="rounded border bg-white px-3 py-1 shadow-sm hover:underline"
           href="/admin"
         >
-          Admin
+          Admin Panel
         </Link>
       )}
       {showLogout && (

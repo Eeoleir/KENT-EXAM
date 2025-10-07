@@ -22,7 +22,7 @@ export default function AdminClient() {
   }
 
   return (
-    <div className="mx-auto mt-12 max-w-5xl space-y-4 p-4">
+    <div className="mx-auto mt-12 max-w-5xl space-y-4 p-4 overflow-x-auto">
       <AdminHeader />
       <UsersTable users={data.users} />
     </div>
