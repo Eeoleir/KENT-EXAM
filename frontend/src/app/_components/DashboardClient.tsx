@@ -197,14 +197,9 @@ export default function DashboardClient({ initialMe }: { initialMe: Me }) {
               </form>
               {error && <p className="mb-2 text-sm text-red-600">{error}</p>}
               <div id="videos" className="grid gap-4">
-                {isLoadingVideos ? (
-                  <>
-                    <SkeletonVideo />
-                    <SkeletonVideo />
-                  </>
-                ) : (
-                  videos.map((v) => <VideoEmbed key={v.id} url={v.url} />)
-                )}
+                {videos.map((v) => (
+                  <VideoEmbed key={v.id} url={v.url} />
+                ))}
               </div>
             </div>
           ) : null}
