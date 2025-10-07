@@ -23,12 +23,11 @@ async function main() {
     },
   });
 
-  console.log("Seeded admin user:", email);
+  // Seeded admin user
 }
 
 main()
-  .catch((err) => {
-    console.error(err);
+  .catch((_err) => {
     process.exit(1);
   })
   .finally(async () => {
