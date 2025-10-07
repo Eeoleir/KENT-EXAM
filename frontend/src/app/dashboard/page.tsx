@@ -1,5 +1,5 @@
 "use client";
-import DashboardClient from "../_components/DashboardClient";
+import DashboardClient from "./components/DashboardClient";
 
 export default function DashboardPage() {
   return <DashboardClient initialMe={null} />;
